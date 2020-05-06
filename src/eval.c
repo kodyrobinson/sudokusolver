@@ -16,7 +16,11 @@ bool roweval(val *firstval) {
 }
 
 bool coleval(val *firstval) {
-    return false;
+    val duparray[BOARDSIZE] = { 0 };
+    for (int i = 0; i < BOARDSIZE; i++) {
+        duparray[i] = firstval[i * BOARDSIZE];
+    }
+    return !dup(duparray);
 }
 
 // Static helper function returns true if the parameter array contains any duplicate values other than 0
