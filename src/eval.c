@@ -8,7 +8,14 @@
 static bool dup(val *firstval);
 
 bool boxeval(val *firstval) {
-    return false;
+    val duparray[BOARDSIZE] = { 0 };
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            duparray[3 * y + x] = *(firstval + 9 * y + x);
+        }
+    }
+    return !dup(duparray);
+
 }
 
 bool roweval(val *firstval) {
