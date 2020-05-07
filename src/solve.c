@@ -16,6 +16,19 @@ int main(int argc, const char *argv[]) {
     char *boardfilename = (char *) calloc(MAXFILESIZE, sizeof(char));
     strcpy(boardfilename, argv[1]);
     FILE *fp = fopen(boardfilename, "r");
+    int numsread = 0;
+    while (numsread < BOARDSIZE * BOARDSIZE) {
+        char currchar = fgetc(fp);
+        if (currchar >= 0 && currchar <= 9) {
+            board[numsread % BOARDSIZE][(numsread - (numsread % BOARDSIZE)) / BOARDSIZE] = currchar;
+            numsread++;
+        }
+        if (currchar == EOF) {
+            break;
+        }
+    }
+    free(boardfilename);
+    printboard();
     
     fclose(fp);
 }
