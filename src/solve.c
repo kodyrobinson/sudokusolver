@@ -1,19 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "eval.h"
 
 #define BOARDSIZE 9
+#define MAXFILESIZE 100
 
 static val board[BOARDSIZE][BOARDSIZE];
 
 void printboard();
 
-int main() {
-    printboard();
-    printf("box eval: %d", boxeval(&board[0][0]));
-    printf("row eval: %d", roweval(&board[0][0]));
+int main(int argc, const char *argv[]) {
+    char *boardfilename = (char *) calloc(MAXFILESIZE, sizeof(char));
+    strcpy(boardfilename, argv[1]);
+    FILE *fp = fopen(boardfilename, "r");
+    
+    fclose(fp);
 }
 
 void printboard() {
