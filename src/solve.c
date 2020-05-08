@@ -6,7 +6,7 @@
 #include "eval.h"
 
 #define BOARDSIZE 9
-#define MAXFILESIZE 100
+#define MAXFILESIZE 1000
 #define FILESIZE 162
 #define MASK 0b00001111
 
@@ -20,7 +20,7 @@ int unknownleft = BOARDSIZE * BOARDSIZE;
 
 void printboard();
 void initboard(char *boardfilename);
-void findpotvals(int x, int y);
+bool findpotvals(int x, int y);
 
 int main(int argc, const char *argv[]) {
     if (argc != 2) {
@@ -32,11 +32,18 @@ int main(int argc, const char *argv[]) {
     printf("=================\n");
     for (int y = 0; y < BOARDSIZE; y++) {
         for (int x = 0; x < BOARDSIZE; x++) {
+            if (board[x][y].known) {
+                continue;
+            }
+            if (unknownleft == 0) {
+                break;
+            }
             findpotvals(x, y);
         }
     }
     printboard();
-    return EXIT_SUCCESS;
+    printf("=================\n");
+    printf("The number of unsolved spaces are: %d\n", unknownleft);
 }
 
 void printboard() {
@@ -66,7 +73,7 @@ void initboard(char *boardfilename) {
     for (int i = 0; i < BOARDSIZE * BOARDSIZE; i++) {
         if (procstring[i] == 0) {
             board[i % BOARDSIZE][(i - (i % BOARDSIZE)) / BOARDSIZE].known = false;
-            bool potentials[10] = { true };
+            bool potentials[10] = {true, true, true, true, true, true, true, true, true, true};
             strcpy((char *)board[i % BOARDSIZE][(i - (i % BOARDSIZE)) / BOARDSIZE].d.potvals, (const char *)potentials);
         } else {
             unknownleft--;
@@ -78,9 +85,9 @@ void initboard(char *boardfilename) {
     fclose(fp);
 }
 
-void findpotvals(int x, int y) {
-    if (board[x][y].known) {
-        return;
+bool findpotvals(int x, int y) {
+    if (board[x][y].known || unknownleft == 0) {
+        return false;
     }
     point box[BOARDSIZE];
     point row[BOARDSIZE];
@@ -110,11 +117,18 @@ void findpotvals(int x, int y) {
             potentials++;
         }
     }
+/*    printf("The space at (%d, %d) has array values of ", x, y);
+    for (int i = 1; i < 10; i++) {
+        printf("%d ", board[x][y].d.potvals[i]);
+    }
+    printf("and a potentials value of %d\n", potentials);
+*/
     if (potentials == 1) {
         int i = 1;
         while (!board[x][y].d.potvals[i]) {
             i++;
         }
+        unknownleft--;
         board[x][y].known = true;
         board[x][y].d.value = i;
         for (int i = 0; i < BOARDSIZE; i++) {
@@ -123,7 +137,7 @@ void findpotvals(int x, int y) {
             findpotvals(col[i].x, col[i].y);
         }
     }
-
+    return true;
 }
 
 

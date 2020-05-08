@@ -9,7 +9,7 @@ typedef char val;
 
 typedef union data {
     val value;
-    bool potvals[10];
+    bool potvals[11];
 } data;
 
 typedef struct elem {
