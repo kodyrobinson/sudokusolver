@@ -1,40 +1,45 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "eval.h"
 
 #define BOARDSIZE 9
 
-static bool dup(val *firstval);
+static bool dup(elem *e);
 
-bool boxeval(val *firstval) {
-    val duparray[BOARDSIZE] = { 0 };
+bool boxeval(elem *e) {
+    elem duparray[BOARDSIZE];
     for (int y = 0; y < 3; y++) {
         for (int x = 0; x < 3; x++) {
-            duparray[3 * y + x] = *(firstval + 9 * y + x);
+            strcpy((char *)&duparray[3 * y + x], (const char *)(e + 9 * x + y));
         }
     }
     return !dup(duparray);
 
 }
 
-bool roweval(val *firstval) {
-    return !dup(firstval);
+bool roweval(elem *e) {
+    return !dup(e);
 }
 
-bool coleval(val *firstval) {
-    val duparray[BOARDSIZE] = { 0 };
+bool coleval(elem *e) {
+    elem duparray[BOARDSIZE];
     for (int i = 0; i < BOARDSIZE; i++) {
-        duparray[i] = firstval[i * BOARDSIZE];
+        strcpy((char *)&duparray[i], (const char *)(e + i * BOARDSIZE));
     }
     return !dup(duparray);
 }
 
 // Static helper function returns true if the parameter array contains any duplicate values other than 0
-static bool dup(val *firstval) {
+static bool dup(elem *e) {
     val temparr[BOARDSIZE] = { 0 };
     for (int i = 0; i < BOARDSIZE; i++) {
-        temparr[i] = firstval[i];
+        if (e->known) {
+            temparr[i] = e[i].d.value;
+        } else {
+            temparr[i] = 0;
+        }
     }
     // Bubble sort the temp array.
     for (int i = 0; i < BOARDSIZE-1; i++) {

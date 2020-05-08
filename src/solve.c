@@ -21,6 +21,7 @@ int unknownleft = BOARDSIZE * BOARDSIZE;
 void printboard();
 void initboard(char *boardfilename);
 bool findpotvals(int x, int y);
+bool evalboard();
 
 int main(int argc, const char *argv[]) {
     if (argc != 2) {
@@ -83,6 +84,11 @@ void initboard(char *boardfilename) {
     }
     free(boardstring);
     fclose(fp);
+    if (evalboard()) {
+        printf("Board looks good!\n");
+    } else {
+        printf("It appears the board has some errors.\n");
+    }
 }
 
 bool findpotvals(int x, int y) {
@@ -146,7 +152,19 @@ bool evalboard() {
     // carry on. After this is performed, you have to revert to looking for 
     // potentials with a value of 1 because the new value will change the box, 
     // row, and column.
-    return false;
+
+    for (int i = 0; i < BOARDSIZE; i++) {
+        if (!coleval(&board[i][0])) {
+            return false;
+        }
+        if (!roweval(&board[0][i])) {
+            return false;
+        }
+        if (!boxeval(&board[i % 3][i - (i % 3)])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 

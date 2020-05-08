@@ -19,14 +19,14 @@ typedef struct elem {
 
 // The following function takes as a parameter a pointer to the first value of a 3x3 box on a sudoku board.
 // It will return true if there are no duplicate values within that box, false otherwise.
-bool boxeval(val *firstval);
+bool boxeval(elem *e);
 
 // The following function takes as a parameter a pointer to the first value of a 9x1 row on a sudoku board.
 // It will return true if there are no duplicate values within that box, false otherwise.
-bool roweval(val *firstval);
+bool roweval(elem *e);
 
 // The following function takes as a parameter a pointer to the first value of a 1x9 column on a sudoku board.
 // It will return true if there are no duplicate values within that box, false otherwise.
-bool coleval(val *firstval);
+bool coleval(elem *e);
 
 #endif
