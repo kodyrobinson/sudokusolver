@@ -20,6 +20,7 @@ int unknownleft = BOARDSIZE * BOARDSIZE;
 
 void printboard();
 void initboard(char *boardfilename);
+void findpotvals(int x, int y);
 
 int main(int argc, const char *argv[]) {
     if (argc != 2) {
@@ -28,6 +29,14 @@ int main(int argc, const char *argv[]) {
     }
     initboard((char *)argv[1]);
     printboard();
+    printf("=================\n");
+    for (int y = 0; y < BOARDSIZE; y++) {
+        for (int x = 0; x < BOARDSIZE; x++) {
+            findpotvals(x, y);
+        }
+    }
+    printboard();
+    return EXIT_SUCCESS;
 }
 
 void printboard() {
@@ -84,6 +93,37 @@ void findpotvals(int x, int y) {
         point colpt = {x, i};
         col[i] = colpt;
     }
+    for (int i = 0; i < BOARDSIZE; i++) {
+        if (board[box[i].x][box[i].y].known) {
+            board[x][y].d.potvals[(int)board[box[i].x][box[i].y].d.value] = false;
+        }
+        if (board[row[i].x][row[i].y].known) {
+            board[x][y].d.potvals[(int)board[row[i].x][row[i].y].d.value] = false;
+        }
+        if (board[col[i].x][col[i].y].known) {
+            board[x][y].d.potvals[(int)board[col[i].x][col[i].y].d.value] = false;
+        }
+    }
+    int potentials = 0;
+    for (int i = 1; i < 10; i++) {
+        if (board[x][y].d.potvals[i]) {
+            potentials++;
+        }
+    }
+    if (potentials == 1) {
+        int i = 1;
+        while (!board[x][y].d.potvals[i]) {
+            i++;
+        }
+        board[x][y].known = true;
+        board[x][y].d.value = i;
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(box[i].x, box[i].y);
+            findpotvals(row[i].x, row[i].y);
+            findpotvals(col[i].x, col[i].y);
+        }
+    }
+
 }
 
 
