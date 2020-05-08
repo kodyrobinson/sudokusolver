@@ -117,12 +117,6 @@ bool findpotvals(int x, int y) {
             potentials++;
         }
     }
-/*    printf("The space at (%d, %d) has array values of ", x, y);
-    for (int i = 1; i < 10; i++) {
-        printf("%d ", board[x][y].d.potvals[i]);
-    }
-    printf("and a potentials value of %d\n", potentials);
-*/
     if (potentials == 1) {
         int i = 1;
         while (!board[x][y].d.potvals[i]) {
@@ -140,6 +134,20 @@ bool findpotvals(int x, int y) {
     return true;
 }
 
+bool evalboard() {
+    // The goal is to include another parameter in the findpotvals function so
+    // that it can check for values with a potentials value of 1 first. This 
+    // will not always work with every puzzle, so we have to also check for 
+    // spaces with a potential value of two. Take the first of these values and
+    // allocate mem for a new board, copy the original board and set that space 
+    // to one of the 2 possibilites, then let it naturally cause a chain reaction
+    // and use this to see if the board is legit. If so, make the real board copy
+    // the forked board. If not, set the value to be the other possibility and 
+    // carry on. After this is performed, you have to revert to looking for 
+    // potentials with a value of 1 because the new value will change the box, 
+    // row, and column.
+    return false;
+}
 
 
 
