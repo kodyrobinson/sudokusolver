@@ -49,7 +49,6 @@ int main(int argc, const char *argv[]) {
                     continue;
                 }
                 if (unknownleft == 0) {
-                    printf("I hit 0 unknowns.\n");
                     break;
                 }
                 findpotvals(&board, x, y, 2);
@@ -59,8 +58,6 @@ int main(int argc, const char *argv[]) {
             }
         }
     }
-    printf("I made it past both potential searches. Onto printboard.\n");
-
     printboard(&board);
     printf("=================\n");
     printf("The number of unsolved spaces are: %d\n", unknownleft);
@@ -180,8 +177,6 @@ bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
         }
         (*tempboard)[x][y].known = true;
         (*tempboard)[x][y].d.value = first;
-        printf("Printing tempboard.\n=================\n");
-        printboard(tempboard);
         for (int i = 0; i < BOARDSIZE; i++) {
             findpotvals(tempboard, box[i].x, box[i].y, 1);
             findpotvals(tempboard, row[i].x, row[i].y, 1);
@@ -207,8 +202,6 @@ bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
         }
         (*otherboard)[x][y].known = true;
         (*otherboard)[x][y].d.value = second;
-        printf("Printing otherboard.\n=================\n");
-        printboard(otherboard);
         for (int i = 0; i < BOARDSIZE; i++) {
             findpotvals(otherboard, box[i].x, box[i].y, 1);
             findpotvals(otherboard, row[i].x, row[i].y, 1);
@@ -225,12 +218,6 @@ bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
                 othercomplete++;
             }
         }
-        printf("first: %d, second: %d\n", first, second);
-        printf("tempcomplete: %d, othercomplete: %d\n", tempcomplete, othercomplete);
-        printf("Printing tempboard.\n=================\n");
-        printboard(tempboard);
-        printf("Printing otherboard.\n=================\n");
-        printboard(otherboard);
         if (tempcomplete > othercomplete) {
             unknownleft = 0;
             for (int i = 0; i < BOARDSIZE; i++) {
@@ -271,15 +258,12 @@ bool evalboard(elem map[BOARDSIZE][BOARDSIZE]) {
 
     for (int i = 0; i < BOARDSIZE; i++) {
         if (!coleval(&map[i][0])) {
-            printf("The %dth column is causing difficulty.", i);
             return false;
         }
         if (!roweval(&map[0][i])) {
-            printf("The %dth row is causing difficulty.", i);
             return false;
         }
         if (!boxeval(&map[i % 3][i - (i % 3)])) {
-            printf("The %dth box is causing difficulty.", i);
             return false;
         }
     }
