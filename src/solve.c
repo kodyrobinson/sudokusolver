@@ -20,7 +20,7 @@ int unknownleft = BOARDSIZE * BOARDSIZE;
 
 void printboard();
 void initboard(char *boardfilename);
-bool findpotvals(elem *map[BOARDSIZE][BOARDSIZE], int x, int y, int pots);
+bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots);
 bool evalboard(elem board[BOARDSIZE][BOARDSIZE]);
 
 int main(int argc, const char *argv[]) {
@@ -39,9 +39,23 @@ int main(int argc, const char *argv[]) {
             if (unknownleft == 0) {
                 break;
             }
-            findpotvals((elem *(*)[BOARDSIZE])&board, x, y, 1);
+            findpotvals(&board, x, y, 1);
         }
     }
+    if (unknownleft > 0) {
+        for (int y = 0; y < BOARDSIZE; y++) {
+            for (int x = 0; x < BOARDSIZE; x++) {
+                if (board[x][y].known) {
+                    continue;
+                }
+                if (unknownleft == 0) {
+                    break;
+                }
+                findpotvals(&board, x, y, 2);
+            }
+        }
+    }
+
     printboard();
     printf("=================\n");
     printf("The number of unsolved spaces are: %d\n", unknownleft);
@@ -96,8 +110,8 @@ void initboard(char *boardfilename) {
     }
 }
 
-bool findpotvals(elem *map[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
-    if (map[x][y].known || unknownleft == 0) {
+bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
+    if ((*map)[x][y].known || unknownleft == 0) {
         return false;
     }
     point box[BOARDSIZE];
@@ -113,29 +127,34 @@ bool findpotvals(elem *map[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
     }
     for (int i = 0; i < BOARDSIZE; i++) {
         if (map[box[i].x][box[i].y]->known) {
-            map[x][y]->d.potvals[(int)map[box[i].x][box[i].y]->d.value] = false;
+            (*map)[x][y].d.potvals[(int)(*map)[box[i].x][box[i].y].d.value] = false;
         }
         if (map[row[i].x][row[i].y]->known) {
-            map[x][y]->d.potvals[(int)map[row[i].x][row[i].y]->d.value] = false;
+            (*map)[x][y].d.potvals[(int)(*map)[row[i].x][row[i].y].d.value] = false;
         }
         if (map[col[i].x][col[i].y]->known) {
-            map[x][y]->d.potvals[(int)map[col[i].x][col[i].y]->d.value] = false;
+            (*map)[x][y].d.potvals[(int)(*map)[col[i].x][col[i].y].d.value] = false;
         }
     }
     int potentials = 0;
+    printf("Potentials: ");
     for (int i = 1; i < 10; i++) {
-        if (map[x][y]->d.potvals[i]) {
+        if ((*map)[x][y].d.potvals[i]) {
+            printf("%d ", (*map)[x][y].d.potvals[i]);
             potentials++;
+        } else {
+            printf("0 ");
         }
     }
+    printf("The point %d, %d has a potentials value of %d.\n", x, y, potentials);
     if (potentials == 1) {
         int i = 1;
-        while (!map[x][y]->d.potvals[i]) {
+        while (!(*map)[x][y].d.potvals[i]) {
             i++;
         }
         unknownleft--;
-        map[x][y]->known = true;
-        map[x][y]->d.value = i;
+        (*map)[x][y].known = true;
+        (*map)[x][y].d.value = i;
         for (int i = 0; i < BOARDSIZE; i++) {
             findpotvals(map, box[i].x, box[i].y, 1);
             findpotvals(map, row[i].x, row[i].y, 1);
@@ -145,11 +164,11 @@ bool findpotvals(elem *map[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
     if (potentials == 2 && pots == 2) {
         int first = 1;
         int second = 1;
-        while (!map[x][y]->d.potvals[first]) {
+        while (!(*map)[x][y].d.potvals[first]) {
             first++;
         }
         second = first + 1;
-        while (!map[x][y]->d.potvals[second]) {
+        while (!(*map)[x][y].d.potvals[second]) {
             second++;
         }
         elem tempboard[BOARDSIZE][BOARDSIZE];
@@ -157,17 +176,24 @@ bool findpotvals(elem *map[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
         tempboard[x][y].known = true;
         tempboard[x][y].d.value = first;
         for (int i = 0; i < BOARDSIZE; i++) {
-            findpotvals(tempboard, box[i].x, box[i].y, 2);
-            findpotvals(tempboard, row[i].x, row[i].y, 2);
-            findpotvals(tempboard, col[i].x, col[i].y, 2);
+            findpotvals(&tempboard, box[i].x, box[i].y, 2);
+            findpotvals(&tempboard, row[i].x, row[i].y, 2);
+            findpotvals(&tempboard, col[i].x, col[i].y, 2);
         }
+        bool tempcomplete = true;
         if (evalboard(tempboard) && tempcomplete) {
             unknownleft = 0;
-            strcpy((char *) map, (const char *) tempboard);
+            strcpy((char *) *map, (const char *) *tempboard);
         } else {
-            map[x][y]->known = true;
-            map[x][y]->d.value = second;
+            (*map)[x][y].known = true;
+            (*map)[x][y].d.value = second;
+            for (int i = 0; i < BOARDSIZE; i++) {
+                findpotvals(map, box[i].x, box[i].y, 2);
+                findpotvals(map, row[i].x, row[i].y, 2);
+                findpotvals(map, col[i].x, col[i].y, 2);
+            }
         }
+    }
 
     return true;
 }
@@ -186,15 +212,15 @@ bool evalboard(elem map[BOARDSIZE][BOARDSIZE]) {
     // row, and column.
 
     for (int i = 0; i < BOARDSIZE; i++) {
-        if (!coleval(&board[i][0])) {
+        if (!coleval(&map[i][0])) {
             printf("The %dth column is causing difficulty.", i);
             return false;
         }
-        if (!roweval(&board[0][i])) {
+        if (!roweval(&map[0][i])) {
             printf("The %dth row is causing difficulty.", i);
             return false;
         }
-        if (!boxeval(&board[i % 3][i - (i % 3)])) {
+        if (!boxeval(&map[i % 3][i - (i % 3)])) {
             printf("The %dth box is causing difficulty.", i);
             return false;
         }

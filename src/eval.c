@@ -20,7 +20,11 @@ bool boxeval(elem *e) {
 }
 
 bool roweval(elem *e) {
-    return !dup(e);
+    elem duparray[BOARDSIZE];
+    for (int i = 0; i < BOARDSIZE; i++) {
+        strcpy((char *)&duparray[i], (const char *)(e + i));
+    }
+    return !dup(duparray);
 }
 
 bool coleval(elem *e) {
