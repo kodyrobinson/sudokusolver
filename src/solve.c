@@ -18,7 +18,7 @@ typedef struct point {
 static elem board[BOARDSIZE][BOARDSIZE];
 int unknownleft = BOARDSIZE * BOARDSIZE;
 
-void printboard();
+void printboard(elem (*map)[BOARDSIZE][BOARDSIZE]);
 void initboard(char *boardfilename);
 bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots);
 bool evalboard(elem board[BOARDSIZE][BOARDSIZE]);
@@ -29,7 +29,7 @@ int main(int argc, const char *argv[]) {
         return EXIT_FAILURE;
     }
     initboard((char *)argv[1]);
-    printboard();
+    printboard(&board);
     printf("=================\n");
     for (int y = 0; y < BOARDSIZE; y++) {
         for (int x = 0; x < BOARDSIZE; x++) {
@@ -49,14 +49,19 @@ int main(int argc, const char *argv[]) {
                     continue;
                 }
                 if (unknownleft == 0) {
+                    printf("I hit 0 unknowns.\n");
                     break;
                 }
                 findpotvals(&board, x, y, 2);
             }
+            if (unknownleft == 0) {
+                break;
+            }
         }
     }
+    printf("I made it past both potential searches. Onto printboard.\n");
 
-    printboard();
+    printboard(&board);
     printf("=================\n");
     printf("The number of unsolved spaces are: %d\n", unknownleft);
     if (evalboard(board) && unknownleft == 0) {
@@ -66,11 +71,11 @@ int main(int argc, const char *argv[]) {
     }
 }
 
-void printboard() {
+void printboard(elem (*map)[BOARDSIZE][BOARDSIZE]) {
     for (int y = 0; y < 9; y++) {
         for (int x = 0; x < 9; x++) {
-            if (board[x][y].known) {
-                printf("%d ", board[x][y].d.value);
+            if ((*map)[x][y].known) {
+                printf("%d ", (*map)[x][y].d.value);
             } else {
                 printf("0 ");
             }
@@ -126,27 +131,22 @@ bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
         col[i] = colpt;
     }
     for (int i = 0; i < BOARDSIZE; i++) {
-        if (map[box[i].x][box[i].y]->known) {
+        if ((*map)[box[i].x][box[i].y].known) {
             (*map)[x][y].d.potvals[(int)(*map)[box[i].x][box[i].y].d.value] = false;
         }
-        if (map[row[i].x][row[i].y]->known) {
+        if ((*map)[row[i].x][row[i].y].known) {
             (*map)[x][y].d.potvals[(int)(*map)[row[i].x][row[i].y].d.value] = false;
         }
-        if (map[col[i].x][col[i].y]->known) {
+        if ((*map)[col[i].x][col[i].y].known) {
             (*map)[x][y].d.potvals[(int)(*map)[col[i].x][col[i].y].d.value] = false;
         }
     }
     int potentials = 0;
-    printf("Potentials: ");
     for (int i = 1; i < 10; i++) {
         if ((*map)[x][y].d.potvals[i]) {
-            printf("%d ", (*map)[x][y].d.potvals[i]);
             potentials++;
-        } else {
-            printf("0 ");
         }
     }
-    printf("The point %d, %d has a potentials value of %d.\n", x, y, potentials);
     if (potentials == 1) {
         int i = 1;
         while (!(*map)[x][y].d.potvals[i]) {
@@ -171,28 +171,86 @@ bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
         while (!(*map)[x][y].d.potvals[second]) {
             second++;
         }
-        elem tempboard[BOARDSIZE][BOARDSIZE];
-        strcpy((char *) tempboard, (const char *) map);
-        tempboard[x][y].known = true;
-        tempboard[x][y].d.value = first;
+        elem (*tempboard)[BOARDSIZE][BOARDSIZE] = calloc(BOARDSIZE * BOARDSIZE, sizeof(elem));
         for (int i = 0; i < BOARDSIZE; i++) {
-            findpotvals(&tempboard, box[i].x, box[i].y, 2);
-            findpotvals(&tempboard, row[i].x, row[i].y, 2);
-            findpotvals(&tempboard, col[i].x, col[i].y, 2);
-        }
-        bool tempcomplete = true;
-        if (evalboard(tempboard) && tempcomplete) {
-            unknownleft = 0;
-            strcpy((char *) *map, (const char *) *tempboard);
-        } else {
-            (*map)[x][y].known = true;
-            (*map)[x][y].d.value = second;
-            for (int i = 0; i < BOARDSIZE; i++) {
-                findpotvals(map, box[i].x, box[i].y, 2);
-                findpotvals(map, row[i].x, row[i].y, 2);
-                findpotvals(map, col[i].x, col[i].y, 2);
+            for (int j = 0; j < BOARDSIZE; j++) {
+                (*tempboard)[j][i].known = (*map)[j][i].known;
+                (*tempboard)[j][i].d = (*map)[j][i].d;
             }
         }
+        (*tempboard)[x][y].known = true;
+        (*tempboard)[x][y].d.value = first;
+        printf("Printing tempboard.\n=================\n");
+        printboard(tempboard);
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(tempboard, box[i].x, box[i].y, 1);
+            findpotvals(tempboard, row[i].x, row[i].y, 1);
+            findpotvals(tempboard, col[i].x, col[i].y, 1);
+        }
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(tempboard, box[i].x, box[i].y, 2);
+            findpotvals(tempboard, row[i].x, row[i].y, 2);
+            findpotvals(tempboard, col[i].x, col[i].y, 2);
+        }
+        int tempcomplete = 0;
+        for (int i = 0; i < BOARDSIZE * BOARDSIZE; i++) {
+            if ((*tempboard)[i % BOARDSIZE][i - (i % BOARDSIZE)].known) {
+                tempcomplete++;
+            }
+        }
+        elem (*otherboard)[BOARDSIZE][BOARDSIZE] = calloc(BOARDSIZE * BOARDSIZE, sizeof(elem));
+        for (int i = 0; i < BOARDSIZE; i++) {
+            for (int j = 0; j < BOARDSIZE; j++) {
+                (*otherboard)[j][i].known = (*map)[j][i].known;
+                (*otherboard)[j][i].d = (*map)[j][i].d;
+            }
+        }
+        (*otherboard)[x][y].known = true;
+        (*otherboard)[x][y].d.value = second;
+        printf("Printing otherboard.\n=================\n");
+        printboard(otherboard);
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(otherboard, box[i].x, box[i].y, 1);
+            findpotvals(otherboard, row[i].x, row[i].y, 1);
+            findpotvals(otherboard, col[i].x, col[i].y, 1);
+        }
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(otherboard, box[i].x, box[i].y, 2);
+            findpotvals(otherboard, row[i].x, row[i].y, 2);
+            findpotvals(otherboard, col[i].x, col[i].y, 2);
+        }
+        int othercomplete = 0;
+        for (int i = 0; i < BOARDSIZE * BOARDSIZE; i++) {
+            if ((*otherboard)[i % BOARDSIZE][i - (i % BOARDSIZE)].known) {
+                othercomplete++;
+            }
+        }
+        printf("first: %d, second: %d\n", first, second);
+        printf("tempcomplete: %d, othercomplete: %d\n", tempcomplete, othercomplete);
+        printf("Printing tempboard.\n=================\n");
+        printboard(tempboard);
+        printf("Printing otherboard.\n=================\n");
+        printboard(otherboard);
+        if (tempcomplete > othercomplete) {
+            unknownleft = 0;
+            for (int i = 0; i < BOARDSIZE; i++) {
+                for (int j = 0; j < BOARDSIZE; j++) {
+                    (*map)[j][i].known = (*tempboard)[j][i].known;
+                    (*map)[j][i].d = (*tempboard)[j][i].d;
+                }
+            }
+        } else {
+            unknownleft = 0;
+            strcpy((char *) map, (const char *) otherboard);
+            for (int i = 0; i < BOARDSIZE; i++) {
+                for (int j = 0; j < BOARDSIZE; j++) {
+                    (*map)[j][i].known = (*otherboard)[j][i].known;
+                    (*map)[j][i].d = (*otherboard)[j][i].d;
+                }
+            }
+        }
+        free(tempboard);
+        free(otherboard);
     }
 
     return true;
