@@ -51,7 +51,7 @@ int main(int argc, const char *argv[]) {
                 if (unknownleft == 0) {
                     break;
                 }
-                findpotvals(&board, x, y, 2);
+                findpotvals(&board, x, y, 3);
             }
             if (unknownleft == 0) {
                 break;
@@ -158,7 +158,7 @@ bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
             findpotvals(map, col[i].x, col[i].y, 1);
         }
     }
-    if (potentials == 2 && pots == 2) {
+    if (potentials == 2 && pots >= 2) {
         int first = 1;
         int second = 1;
         while (!(*map)[x][y].d.potvals[first]) {
@@ -228,7 +228,6 @@ bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
             }
         } else {
             unknownleft = 0;
-            strcpy((char *) map, (const char *) otherboard);
             for (int i = 0; i < BOARDSIZE; i++) {
                 for (int j = 0; j < BOARDSIZE; j++) {
                     (*map)[j][i].known = (*otherboard)[j][i].known;
@@ -238,6 +237,142 @@ bool findpotvals(elem (*map)[BOARDSIZE][BOARDSIZE], int x, int y, int pots) {
         }
         free(tempboard);
         free(otherboard);
+    }
+
+    if (potentials == 3 && pots == 3) {
+        int first = 1;
+        int second = 1;
+        int third = 1;
+        while (!(*map)[x][y].d.potvals[first]) {
+            first++;
+        }
+        second = first + 1;
+        while (!(*map)[x][y].d.potvals[second]) {
+            second++;
+        }
+        third = second + 1;
+        while (!(*map)[x][y].d.potvals[third]) {
+            third++;
+        }
+        elem (*tempboard)[BOARDSIZE][BOARDSIZE] = calloc(BOARDSIZE * BOARDSIZE, sizeof(elem));
+        for (int i = 0; i < BOARDSIZE; i++) {
+            for (int j = 0; j < BOARDSIZE; j++) {
+                (*tempboard)[j][i].known = (*map)[j][i].known;
+                (*tempboard)[j][i].d = (*map)[j][i].d;
+            }
+        }
+        (*tempboard)[x][y].known = true;
+        (*tempboard)[x][y].d.value = first;
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(tempboard, box[i].x, box[i].y, 1);
+            findpotvals(tempboard, row[i].x, row[i].y, 1);
+            findpotvals(tempboard, col[i].x, col[i].y, 1);
+        }
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(tempboard, box[i].x, box[i].y, 2);
+            findpotvals(tempboard, row[i].x, row[i].y, 2);
+            findpotvals(tempboard, col[i].x, col[i].y, 2);
+        }
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(tempboard, box[i].x, box[i].y, 3);
+            findpotvals(tempboard, row[i].x, row[i].y, 3);
+            findpotvals(tempboard, col[i].x, col[i].y, 3);
+        }
+        int tempcomplete = 0;
+        for (int i = 0; i < BOARDSIZE * BOARDSIZE; i++) {
+            if ((*tempboard)[i % BOARDSIZE][i - (i % BOARDSIZE)].known) {
+                tempcomplete++;
+            }
+        }
+        elem (*otherboard)[BOARDSIZE][BOARDSIZE] = calloc(BOARDSIZE * BOARDSIZE, sizeof(elem));
+        for (int i = 0; i < BOARDSIZE; i++) {
+            for (int j = 0; j < BOARDSIZE; j++) {
+                (*otherboard)[j][i].known = (*map)[j][i].known;
+                (*otherboard)[j][i].d = (*map)[j][i].d;
+            }
+        }
+        (*otherboard)[x][y].known = true;
+        (*otherboard)[x][y].d.value = second;
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(otherboard, box[i].x, box[i].y, 1);
+            findpotvals(otherboard, row[i].x, row[i].y, 1);
+            findpotvals(otherboard, col[i].x, col[i].y, 1);
+        }
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(otherboard, box[i].x, box[i].y, 2);
+            findpotvals(otherboard, row[i].x, row[i].y, 2);
+            findpotvals(otherboard, col[i].x, col[i].y, 2);
+        }
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(otherboard, box[i].x, box[i].y, 3);
+            findpotvals(otherboard, row[i].x, row[i].y, 3);
+            findpotvals(otherboard, col[i].x, col[i].y, 3);
+        }
+        int othercomplete = 0;
+        for (int i = 0; i < BOARDSIZE * BOARDSIZE; i++) {
+            if ((*otherboard)[i % BOARDSIZE][i - (i % BOARDSIZE)].known) {
+                othercomplete++;
+            }
+        }
+        elem (*thirdboard)[BOARDSIZE][BOARDSIZE] = calloc(BOARDSIZE * BOARDSIZE, sizeof(elem));
+        for (int i = 0; i < BOARDSIZE; i++) {
+            for (int j = 0; j < BOARDSIZE; j++) {
+                (*thirdboard)[j][i].known = (*map)[j][i].known;
+                (*thirdboard)[j][i].d = (*map)[j][i].d;
+            }
+        }
+        (*thirdboard)[x][y].known = true;
+        (*thirdboard)[x][y].d.value = third;
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(thirdboard, box[i].x, box[i].y, 1);
+            findpotvals(thirdboard, row[i].x, row[i].y, 1);
+            findpotvals(thirdboard, col[i].x, col[i].y, 1);
+        }
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(thirdboard, box[i].x, box[i].y, 2);
+            findpotvals(thirdboard, row[i].x, row[i].y, 2);
+            findpotvals(thirdboard, col[i].x, col[i].y, 2);
+        }
+        for (int i = 0; i < BOARDSIZE; i++) {
+            findpotvals(thirdboard, box[i].x, box[i].y, 3);
+            findpotvals(thirdboard, row[i].x, row[i].y, 3);
+            findpotvals(thirdboard, col[i].x, col[i].y, 3);
+        }
+        int thirdcomplete = 0;
+        for (int i = 0; i < BOARDSIZE * BOARDSIZE; i++) {
+            if ((*thirdboard)[i % BOARDSIZE][i - (i % BOARDSIZE)].known) {
+                thirdcomplete++;
+            }
+        }
+        if (tempcomplete > othercomplete && tempcomplete > thirdcomplete) {
+            unknownleft = 0;
+            for (int i = 0; i < BOARDSIZE; i++) {
+                for (int j = 0; j < BOARDSIZE; j++) {
+                    (*map)[j][i].known = (*tempboard)[j][i].known;
+                    (*map)[j][i].d = (*tempboard)[j][i].d;
+                }
+            }
+        } else if (othercomplete > tempcomplete && othercomplete > thirdcomplete) {
+            unknownleft = 0;
+            for (int i = 0; i < BOARDSIZE; i++) {
+                for (int j = 0; j < BOARDSIZE; j++) {
+                    (*map)[j][i].known = (*otherboard)[j][i].known;
+                    (*map)[j][i].d = (*otherboard)[j][i].d;
+                }
+            }
+        } else {
+            unknownleft = 0;
+            for (int i = 0; i < BOARDSIZE; i++) {
+                for (int j = 0; j < BOARDSIZE; j++) {
+                    (*map)[j][i].known = (*thirdboard)[j][i].known;
+                    (*map)[j][i].d = (*thirdboard)[j][i].d;
+                }
+            }
+        free(thirdboard);
+        free(tempboard);
+        free(otherboard);
+        }
+
     }
 
     return true;
